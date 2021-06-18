@@ -29,7 +29,7 @@ func main() {
 	log.SetFlags(log.LstdFlags | log.Lshortfile)
 
 	// 服务器开始监听
-	server, err := net.Listen("tcp", "localhost:8888")
+	server, err := net.Listen("tcp", ":8888")
 	if err != nil {
 		fmt.Println(err)
 		log.Fatalln(err)
