@@ -1,14 +1,17 @@
-package tools
+package spiderText
 
 import (
+	"GoProject/spider/httpRequest"
 	"log"
 	"regexp"
 	"time"
 
+	"github.com/garyburd/redigo/redis"
 	_ "github.com/go-sql-driver/mysql"
-	"github.com/gomodule/redigo/redis"
 	"github.com/jmoiron/sqlx"
 )
+
+var mysqlAccount string = "账号密码等..."
 
 type urls struct {
 	Url string `db:"url"`
@@ -19,50 +22,13 @@ type news struct {
 	Title string `db:"title"`
 }
 
-// 获取 robots 文件 disallow 内容
-var Disallow map[string]bool = AnalysisRobotsTxt("https://finance.sina.com.cn/robots.txt")
-
-// 得到正则表达式分析的页面结果
-func RegexpHtml(url string, regexpRule string) []string {
-	// 如果是 disallow 的内容，则返回空
-	if _, ok := Disallow[url]; ok {
-		return nil
-	}
-	html := GetRequestByte(url)
-
-	obj := regexp.MustCompile(regexpRule)
-	arr := obj.FindAllStringSubmatch(string(html), -1)
-	ret := make([]string, 0)
-	for _, strs := range arr {
-		ret = append(ret, strs[1])
-	}
-	return ret
-}
-
-// 分析 robots 文件
-func AnalysisRobotsTxt(url string) map[string]bool {
-	// 获得 robots.txt 文件内容
-	html := GetRequestByte(url)
-
-	// 查找 Disallow 的内容
-	obj := regexp.MustCompile(`Disallow: ([\s\S]+?)(\n)`)
-	arr := obj.FindAllStringSubmatch(string(html), -1)
-
-	ret := make(map[string]bool)
-	for _, i := range arr {
-		ret[i[1]] = true
-	}
-
-	return ret
-}
-
 // 返回文章链接和标题
 func Search() [][]string {
 	// 连接 MySQL
-	db, _ := sqlx.Open("mysql", 填入数据库账号密码等)
+	db, _ := sqlx.Open("mysql", mysqlAccount)
 	defer db.Close()
 
-	html := GetRequestByte("https://finance.sina.com.cn/stock/")
+	html := httpRequest.GetRequestByte("https://finance.sina.com.cn/stock/")
 
 	// 匹配规则
 	rule := `href="(https://finance.sina.com.cn/stock/[\S]+?html[\S]*?)">[\S]+?</a>`
@@ -78,15 +44,13 @@ func Search() [][]string {
 		rec[data.Url] = true
 	}
 
-	for i, _ := range arr {
-		if _, ok := rec[arr[i][1]]; ok {
+	for index := range arr {
+		if _, ok := rec[arr[index][1]]; ok {
 			// 已经存储的直接跳过
 			continue
-		} else if _, ok := Disallow[arr[i][1]]; ok {
-			// 在 disallow 列表中的跳过
-			continue
 		}
-		arr[i] = append(arr[i], RegexpHtml(arr[i][1], `<title>([\s\S]+?)</title>`)[0])
+
+		arr[index] = append(arr[index], httpRequest.RegexpHtml(arr[index][1], `<title>([\s\S]+?)</title>`)[0])
 	}
 
 	return arr
@@ -94,7 +58,7 @@ func Search() [][]string {
 
 // 生成正文
 func GenerateText(arr [][]string) string {
-	db, _ := sqlx.Open("mysql", 填入数据库账号密码等)
+	db, _ := sqlx.Open("mysql", mysqlAccount)
 	defer db.Close()
 	text := ``
 
@@ -124,7 +88,7 @@ func GenerateText(arr [][]string) string {
 			return ""
 		}
 
-		SaveRedis(data[1])
+		// SaveRedis(data[1])
 	}
 
 	return text
@@ -152,7 +116,7 @@ func SaveRedis(member ...string) string {
 }
 
 func SelectFirst20() string {
-	db := sqlx.MustOpen("mysql", 填入数据库账号密码等)
+	db := sqlx.MustOpen("mysql", mysqlAccount)
 	defer db.Close()
 	news := []news{}
 

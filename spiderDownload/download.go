@@ -1,12 +1,14 @@
-package tools
+package spiderDownload
 
 import (
+	"GoProject/spider/httpRequest"
 	"io/ioutil"
 	"log"
 	"math/rand"
 	"os"
 	"regexp"
 	"strconv"
+	"sync"
 )
 
 // 下载资源
@@ -32,7 +34,7 @@ func DownloadGet(url string, position ...string) {
 	// 递归创建所有所需文件夹
 	os.MkdirAll(fileroot, 0644)
 
-	data := GetRequestByte(url)
+	data := httpRequest.GetRequestByte(url)
 
 	err := ioutil.WriteFile(pos, data, 0644)
 	if err != nil {
@@ -55,8 +57,20 @@ func DownloadHtmlSource(url, rule string, position ...string) {
 
 	// 资源文件匹配规则
 	sourceRule := rule
-	sources := RegexpHtml(url, sourceRule)
+	sources := httpRequest.RegexpHtml(url, sourceRule)
+
+	var wg sync.WaitGroup
+	controlMaxNum := make(chan int, 5)
+
+	// 并发下载资源，最大同时下载 5 条
 	for _, urls := range sources {
-		DownloadGet(urls, pos+urls)
+		wg.Add(1)
+		controlMaxNum <- 1
+		go func(urls, pos string) {
+			DownloadGet(urls, pos+urls)
+			wg.Done()
+			<-controlMaxNum
+		}(urls, pos)
 	}
+	wg.Wait()
 }

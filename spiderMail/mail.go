@@ -1,4 +1,4 @@
-package tools
+package spiderMail
 
 import (
 	"log"
@@ -16,10 +16,10 @@ type Mail struct {
 	// 接收者邮箱
 	Receiver string
 
-	// 服务器地址，outlook 是 smtp.office365.com
+	// 服务器地址，outlook 为 smtp.office365.com
 	ServerAddr string
 
-	// 服务器端口，outlook 是 587
+	// 服务器端口，outlook 为 587
 	ServerPort int
 
 	// 可选附件

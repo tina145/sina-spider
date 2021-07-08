@@ -1,7 +1,7 @@
-package users
+package spiderUsers
 
 import (
-	"GoProject/spider/tools"
+	"GoProject/spider/spiderMail"
 	"crypto/sha512"
 	"encoding/hex"
 	"fmt"
@@ -15,6 +15,8 @@ import (
 	"github.com/gomodule/redigo/redis"
 	"github.com/jmoiron/sqlx"
 )
+
+var mysqlAccount string = "账号密码等..."
 
 type User struct {
 	MailAccount  string
@@ -30,7 +32,7 @@ type userAcnt struct {
 }
 
 func (user *User) CheckUserExist(registerAccount string) bool {
-	db := sqlx.MustConnect("mysql", 填入数据库账号密码等)
+	db := sqlx.MustConnect("mysql", mysqlAccount)
 	defer db.Close()
 
 	useraccount := userAcnt{}
@@ -42,7 +44,7 @@ func (user *User) CheckUserExist(registerAccount string) bool {
 
 // 注册功能
 func (user *User) Register(registerAccount, registerPassword string) string {
-	db := sqlx.MustConnect("mysql", 填入数据库账号密码等)
+	db := sqlx.MustConnect("mysql", mysqlAccount)
 	defer db.Close()
 
 	passwd := make([]byte, 0)
@@ -74,7 +76,7 @@ func (user *User) Register(registerAccount, registerPassword string) string {
 // 登录功能
 func (user *User) Login() string {
 	userpasswd := userData{}
-	db := sqlx.MustConnect("mysql", 填入数据库账号密码等)
+	db := sqlx.MustConnect("mysql", mysqlAccount)
 	defer db.Close()
 
 	code := sha512.Sum512([]byte(user.MailPassword))
@@ -92,7 +94,7 @@ func (user *User) Login() string {
 
 // 修改密码
 func (user *User) ChangePassword(newPassword string) string {
-	db := sqlx.MustConnect("mysql", 填入数据库账号密码等)
+	db := sqlx.MustConnect("mysql", mysqlAccount)
 	defer db.Close()
 
 	tx, err := db.Begin()
@@ -122,10 +124,9 @@ func (user *User) ChangePassword(newPassword string) string {
 // 发送验证码
 func (user *User) Verification(ReceiverAccount string) {
 	// 接收者邮箱
-	mail := &tools.Mail{
-		// 根据自己需求修改 
-		SenderAccount:  xxx@xxx,
-		SenderPassword: yyy,
+	mail := &spiderMail.Mail{
+		SenderAccount:  "发生方邮箱",
+		SenderPassword: "发送方密码",
 		Receiver:       ReceiverAccount,
 		ServerAddr:     "smtp.office365.com",
 		ServerPort:     587,

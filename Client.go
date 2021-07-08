@@ -12,9 +12,13 @@ import (
 
 var wg sync.WaitGroup
 
+var targetIP string = "想连接的服务器 IP 及端口"
+
 func main() {
 	logFile, err := os.OpenFile(`.\\Logs.txt`, os.O_CREATE|os.O_RDWR|os.O_APPEND, 0644)
-	defer logFile.Close()
+	defer func() {
+		logFile.Close()
+	}()
 	if err != nil {
 		fmt.Println("文件错误")
 		time.Sleep(time.Hour)
@@ -25,7 +29,8 @@ func main() {
 	log.SetOutput(logFile)
 
 	// 使用时要换成自己的 IP 及端口号
-	connect, err := net.DialTimeout("tcp", 服务器 IP 及端口号, time.Second*30)
+	fmt.Println("尝试连接中...")
+	connect, err := net.Dial("tcp", targetIP)
 
 	log.SetPrefix(connect.LocalAddr().String() + "：")
 	log.SetFlags(log.LstdFlags | log.Lshortfile)
@@ -40,7 +45,7 @@ func main() {
 
 	fmt.Println("连接成功!")
 	fmt.Println("请选择执行的功能：")
-	fmt.Println("\t\t输入 register 注册")
+	fmt.Println("\t\t输入 register 注册账号（使用邮箱）")
 	fmt.Println("\t\t输入 login 登录")
 	fmt.Println("\t\t输入 send 获取一次要闻")
 	fmt.Println("\t\t输入 exit 退出")
@@ -65,6 +70,10 @@ func send(connect net.Conn) {
 	for {
 		obj.Scan()
 		text := obj.Text()
+		if len(text) > 128 {
+			fmt.Println("字符太多，请重新输入")
+			continue
+		}
 
 		err := connect.SetWriteDeadline(time.Now().Add(time.Second * 60))
 
