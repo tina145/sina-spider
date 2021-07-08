@@ -37,7 +37,6 @@ func main() {
 		return
 	}
 
-	// 服务器关闭时执行的操作
 	defer server.Close()
 
 	fmt.Println("服务器监听中...")
@@ -53,7 +52,11 @@ func main() {
 		}
 		fmt.Println(connect.RemoteAddr().String() + " 已建立连接")
 		log.Println(connect.RemoteAddr().String() + " 已建立连接")
+
 		// 新开一个协程处理请求
-		go serverExe.Solve(connect)
+		go func(connect net.Conn) {
+			serverExe.Solve(connect)
+			connect.Close()
+		}(connect)
 	}
 }

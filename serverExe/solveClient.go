@@ -24,7 +24,6 @@ func Solve(connect net.Conn) {
 		fmt.Println(connect.RemoteAddr().String() + " 已断开连接")
 		log.Println(connect.RemoteAddr().String() + " 已断开连接")
 		redisConn.Close()
-		connect.Close()
 	}()
 
 	for {
