@@ -30,14 +30,11 @@ func Search() [][]string {
 	arr := obj.FindAllStringSubmatch(string(html), -1)
 
 	for index := range arr {
-		rwmutex.Lock()
 		if FindFromCache("seturl", arr[index][1]) {
 			continue
 		}
-
 		arr[index] = append(arr[index], httpRequest.RegexpHtml(arr[index][1], `<title>([\s\S]+?)</title>`)[0])
 		SaveRedis(arr[index][1], arr[index][2])
-		rwmutex.Unlock()
 	}
 
 	return arr
@@ -95,6 +92,9 @@ func FindFromCache(key, member string) bool {
 func SaveRedis(member ...string) {
 	connect, _ := redis.Dial("tcp", "127.0.0.1:6379")
 	defer connect.Close()
+
+	rwmutex.Lock()
+	defer rwmutex.Unlock()
 
 	llen, err := redis.Int(connect.Do("LLEN", "listurl"))
 	if err != nil {

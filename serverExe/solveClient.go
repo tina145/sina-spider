@@ -37,7 +37,7 @@ func Solve(connect net.Conn) {
 				connect.Write([]byte("please sign in"))
 				continue
 			}
-			fmt.Println("正在向 " + connect.RemoteAddr().String() + "发送中...")
+			fmt.Println("正在向 " + connect.RemoteAddr().String() + " 发送中...")
 			log.Println(connect.RemoteAddr().String() + " 请求 " + string(text))
 
 			spiderText.GenerateText()

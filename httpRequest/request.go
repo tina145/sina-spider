@@ -27,7 +27,7 @@ func GetRequestByte(url string) []byte {
 
 	res, err := getHtmlClient.Do(req)
 	if err != nil {
-		log.Println(nil)
+		log.Println(err)
 		return nil
 	}
 
