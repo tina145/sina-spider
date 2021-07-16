@@ -1,7 +1,7 @@
 package serverExe
 
 import (
-	"GoProject/spider/spiderMail"
+	"GoProject/spider/httpRequest"
 	"GoProject/spider/spiderText"
 	"GoProject/spider/spiderUsers"
 	"fmt"
@@ -9,12 +9,10 @@ import (
 	"net"
 	"time"
 
-	"github.com/garyburd/redigo/redis"
 	"github.com/go-gomail/gomail"
 )
 
 func Solve(connect net.Conn) {
-	redisConn, _ := redis.Dial("tcp", "127.0.0.1:6379")
 	isLogin := false
 
 	user := &spiderUsers.User{}
@@ -23,13 +21,12 @@ func Solve(connect net.Conn) {
 		connect.Write([]byte("Welcome to use next time!"))
 		fmt.Println(connect.RemoteAddr().String() + " 已断开连接")
 		log.Println(connect.RemoteAddr().String() + " 已断开连接")
-		redisConn.Close()
 	}()
 
 	for {
 		temp, err := ReadText(connect)
 		if err != nil {
-			return
+			break
 		}
 		text := temp
 
@@ -43,20 +40,14 @@ func Solve(connect net.Conn) {
 			fmt.Println("正在向 " + connect.RemoteAddr().String() + "发送中...")
 			log.Println(connect.RemoteAddr().String() + " 请求 " + string(text))
 
-			spiderText.GenerateText(spiderText.Search())
+			spiderText.GenerateText()
 			// 正文内容
 			texts := spiderText.SelectFirst20()
 
 			connect.Write([]byte("delivering..."))
 
 			// 构造邮件对象
-			mail := &spiderMail.Mail{
-				SenderAccount:  "发送方邮箱",
-				SenderPassword: "发送方密码",
-				Receiver:       user.MailAccount,
-				ServerAddr:     "smtp.office365.com",
-				ServerPort:     587,
-			}
+			mail := httpRequest.GetNewMail(user.MailAccount)
 
 			// 发送消息
 			mail.Send(time.Now().String()[:19]+" "+time.Now().Weekday().String()+"：每日要闻", texts, gomail.NewMessage())
@@ -156,7 +147,6 @@ func Solve(connect net.Conn) {
 				status := user.Login()
 				if status == "success" {
 					isLogin = true
-					redisConn.Do("set", connect.RemoteAddr().String(), "login", "ex", 300)
 				}
 				connect.Write([]byte(status))
 			}

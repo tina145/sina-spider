@@ -1,6 +1,7 @@
 package main
 
 import (
+	"GoProject/spider/httpRequest"
 	"bufio"
 	"fmt"
 	"log"
@@ -11,8 +12,6 @@ import (
 )
 
 var wg sync.WaitGroup
-
-var targetIP string = "想连接的服务器 IP 及端口"
 
 func main() {
 	logFile, err := os.OpenFile(`.\\Logs.txt`, os.O_CREATE|os.O_RDWR|os.O_APPEND, 0644)
@@ -30,7 +29,7 @@ func main() {
 
 	// 使用时要换成自己的 IP 及端口号
 	fmt.Println("尝试连接中...")
-	connect, err := net.Dial("tcp", targetIP)
+	connect, err := net.Dial("tcp", httpRequest.CliConnect)
 
 	log.SetPrefix(connect.LocalAddr().String() + "：")
 	log.SetFlags(log.LstdFlags | log.Lshortfile)

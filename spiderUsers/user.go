@@ -1,7 +1,7 @@
 package spiderUsers
 
 import (
-	"GoProject/spider/spiderMail"
+	"GoProject/spider/httpRequest"
 	"crypto/sha512"
 	"encoding/hex"
 	"fmt"
@@ -15,8 +15,6 @@ import (
 	"github.com/gomodule/redigo/redis"
 	"github.com/jmoiron/sqlx"
 )
-
-var mysqlAccount string = "账号密码等..."
 
 type User struct {
 	MailAccount  string
@@ -32,7 +30,7 @@ type userAcnt struct {
 }
 
 func (user *User) CheckUserExist(registerAccount string) bool {
-	db := sqlx.MustConnect("mysql", mysqlAccount)
+	db := sqlx.MustConnect("mysql", httpRequest.MySQLInfo)
 	defer db.Close()
 
 	useraccount := userAcnt{}
@@ -44,7 +42,7 @@ func (user *User) CheckUserExist(registerAccount string) bool {
 
 // 注册功能
 func (user *User) Register(registerAccount, registerPassword string) string {
-	db := sqlx.MustConnect("mysql", mysqlAccount)
+	db := sqlx.MustConnect("mysql", httpRequest.MySQLInfo)
 	defer db.Close()
 
 	passwd := make([]byte, 0)
@@ -76,7 +74,7 @@ func (user *User) Register(registerAccount, registerPassword string) string {
 // 登录功能
 func (user *User) Login() string {
 	userpasswd := userData{}
-	db := sqlx.MustConnect("mysql", mysqlAccount)
+	db := sqlx.MustConnect("mysql", httpRequest.MySQLInfo)
 	defer db.Close()
 
 	code := sha512.Sum512([]byte(user.MailPassword))
@@ -94,7 +92,7 @@ func (user *User) Login() string {
 
 // 修改密码
 func (user *User) ChangePassword(newPassword string) string {
-	db := sqlx.MustConnect("mysql", mysqlAccount)
+	db := sqlx.MustConnect("mysql", httpRequest.MySQLInfo)
 	defer db.Close()
 
 	tx, err := db.Begin()
@@ -124,13 +122,7 @@ func (user *User) ChangePassword(newPassword string) string {
 // 发送验证码
 func (user *User) Verification(ReceiverAccount string) {
 	// 接收者邮箱
-	mail := &spiderMail.Mail{
-		SenderAccount:  "发生方邮箱",
-		SenderPassword: "发送方密码",
-		Receiver:       ReceiverAccount,
-		ServerAddr:     "smtp.office365.com",
-		ServerPort:     587,
-	}
+	mail := httpRequest.GetNewMail(ReceiverAccount)
 
 	verificationCode := user.sendCode()
 
@@ -140,7 +132,7 @@ func (user *User) Verification(ReceiverAccount string) {
 	defer connect.Close()
 
 	// 验证码持续时间 5 分钟，过期自动失效
-	_, err := connect.Do("set", ReceiverAccount, verificationCode, "ex", "300")
+	_, err := connect.Do("SET", ReceiverAccount, verificationCode, "ex", "300")
 	if err != nil {
 		fmt.Println(err)
 	}
@@ -154,7 +146,7 @@ func (user *User) GetVerificationCode(ReceiverAccount string) string {
 	connect, _ := redis.Dial("tcp", "127.0.0.1:6379")
 	defer connect.Close()
 
-	reply, _ := redis.String(connect.Do("get", ReceiverAccount))
+	reply, _ := redis.String(connect.Do("GET", ReceiverAccount))
 	return reply
 }
 
@@ -163,7 +155,7 @@ func (user *User) FindVerificationCode(ReceiverAccount string) bool {
 	connect, _ := redis.Dial("tcp", "127.0.0.1:6379")
 	defer connect.Close()
 
-	isExist, _ := redis.Bool(connect.Do("exists", ReceiverAccount))
+	isExist, _ := redis.Bool(connect.Do("EXISTS", ReceiverAccount))
 	return isExist
 }
 

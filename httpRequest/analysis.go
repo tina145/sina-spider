@@ -71,7 +71,7 @@ func helpToGetFirstHtml(url string) []byte {
 		return nil
 	}
 
-	// 随即设置一个 useragent
+	// 随机设置一个 useragent
 	req.Header.Set("User-Agent", GetRandomUserAgent())
 
 	res, err := getHtmlClient.Do(req)

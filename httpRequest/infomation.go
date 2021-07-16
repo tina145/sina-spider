@@ -1,6 +1,7 @@
 package httpRequest
 
 import (
+	"GoProject/spider/spiderMail"
 	"crypto/rand"
 	"log"
 	"math/big"
@@ -21,10 +22,24 @@ var userAgents []string = []string{
 	"Mozilla/5.0 (compatible; MSIE 9.0; Windows NT 6.1; Trident/5.0",
 	"Mozilla/5.0 (Windows NT 6.1; rv:2.0.1) Gecko/20100101 Firefox/4.0.1"}
 
+var MySQLInfo string = 连接账号和密码
+
+var CliConnect string = 服务端 IP
+
 func GetRandomUserAgent() string {
 	n, err := rand.Int(rand.Reader, big.NewInt(int64(len(userAgents))))
 	if err != nil {
 		log.Println(err)
 	}
 	return userAgents[n.Int64()]
+}
+
+func GetNewMail(userMailAccount string) *spiderMail.Mail {
+	return &spiderMail.Mail{
+		SenderAccount:  发送账号,
+		SenderPassword: 发送密码,
+		Receiver:       userMailAccount,
+		ServerAddr:     "smtp.office365.com",
+		ServerPort:     587,
+	}
 }

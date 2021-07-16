@@ -4,29 +4,22 @@ import (
 	"GoProject/spider/httpRequest"
 	"log"
 	"regexp"
-	"time"
+	"sync"
 
 	"github.com/garyburd/redigo/redis"
 	_ "github.com/go-sql-driver/mysql"
 	"github.com/jmoiron/sqlx"
 )
 
-var mysqlAccount string = "账号密码等..."
-
-type urls struct {
-	Url string `db:"url"`
-}
-
-type news struct {
-	Url   string `db:"url"`
-	Title string `db:"title"`
-}
+var rwmutex *sync.RWMutex = &sync.RWMutex{}
 
 // 返回文章链接和标题
 func Search() [][]string {
-	// 连接 MySQL
-	db, _ := sqlx.Open("mysql", mysqlAccount)
+	db, _ := sqlx.Open("mysql", httpRequest.MySQLInfo)
 	defer db.Close()
+
+	connect, _ := redis.Dial("tcp", "127.0.0.1:6379")
+	defer connect.Close()
 
 	html := httpRequest.GetRequestByte("https://finance.sina.com.cn/stock/")
 
@@ -36,29 +29,24 @@ func Search() [][]string {
 
 	arr := obj.FindAllStringSubmatch(string(html), -1)
 
-	// 查看 url 是否有重复
-	datas := make([]urls, 0)
-	db.Select(&datas, "SELECT url FROM urlinfo")
-	rec := make(map[string]bool)
-	for _, data := range datas {
-		rec[data.Url] = true
-	}
-
 	for index := range arr {
-		if _, ok := rec[arr[index][1]]; ok {
-			// 已经存储的直接跳过
+		rwmutex.Lock()
+		if FindFromCache("seturl", arr[index][1]) {
 			continue
 		}
 
 		arr[index] = append(arr[index], httpRequest.RegexpHtml(arr[index][1], `<title>([\s\S]+?)</title>`)[0])
+		SaveRedis(arr[index][1], arr[index][2])
+		rwmutex.Unlock()
 	}
 
 	return arr
 }
 
 // 生成正文
-func GenerateText(arr [][]string) string {
-	db, _ := sqlx.Open("mysql", mysqlAccount)
+func GenerateText() string {
+	arr := Search()
+	db, _ := sqlx.Open("mysql", httpRequest.MySQLInfo)
 	defer db.Close()
 	text := ``
 
@@ -87,8 +75,6 @@ func GenerateText(arr [][]string) string {
 			log.Println(err)
 			return ""
 		}
-
-		// SaveRedis(data[1])
 	}
 
 	return text
@@ -98,35 +84,54 @@ func GenerateText(arr [][]string) string {
 func FindFromCache(key, member string) bool {
 	connect, _ := redis.Dial("tcp", "127.0.0.1:6379")
 	defer connect.Close()
-	reply, _ := redis.Bool(connect.Do("SISMEMBER", key, member))
+	reply, err := redis.Bool(connect.Do("SISMEMBER", key, member))
+	if err != nil {
+		log.Println(err)
+	}
 	return reply
 }
 
 // 存储到缓存中
-func SaveRedis(member ...string) string {
+func SaveRedis(member ...string) {
 	connect, _ := redis.Dial("tcp", "127.0.0.1:6379")
 	defer connect.Close()
 
-	key := time.Now().String()
-	reply, _ := redis.String(connect.Do("SADD", key, member))
+	llen, err := redis.Int(connect.Do("LLEN", "listurl"))
+	if err != nil {
+		log.Println(err)
+	}
 
-	// 设置一天后过期
-	connect.Do("expire", "key", 86400)
-	return reply
+	// 链表中超过 100 条消息开始淘汰，保留 20 条最新消息
+	if llen > 100 {
+		connect.Do("LTRIM", "listurl", 0, 19)
+		connect.Do("LTRIM", "listtitle", 0, 19)
+	}
+
+	connect.Do("SADD", "seturl", member[0])
+	connect.Do("LPUSH", "listurl", member[0])
+	connect.Do("LPUSH", "listtitle", member[1])
 }
 
 func SelectFirst20() string {
-	db := sqlx.MustOpen("mysql", mysqlAccount)
-	defer db.Close()
-	news := []news{}
+	rwmutex.RLock()
 
-	db.Select(&news, "SELECT url, title FROM urlinfo ORDER BY ID DESC LIMIT 20")
+	con, _ := redis.Dial("tcp", "127.0.0.1:6379")
+	titles, err := redis.Strings(con.Do("LRANGE", "listtitle", 0, 19))
+	if err != nil {
+		log.Println(err)
+	}
+	urls, err := redis.Strings(con.Do("LRANGE", "listurl", 0, 19))
 
+	rwmutex.RUnlock()
+
+	if err != nil {
+		log.Println(err)
+	}
 	text := ``
 
-	for _, data := range news {
+	for index := range urls {
 		text += `<h2>
-		<a target="_blank" href="` + data.Url + `">` + data.Title + `</a>
+		<a target="_blank" href="` + urls[index] + `">` + titles[index] + `</a>
 		<h2>`
 	}
 
