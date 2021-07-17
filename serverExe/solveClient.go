@@ -1,6 +1,7 @@
 package serverExe
 
 import (
+	"GoProject/spider/flowcontroller"
 	"GoProject/spider/httpRequest"
 	"GoProject/spider/spiderText"
 	"GoProject/spider/spiderUsers"
@@ -24,7 +25,18 @@ func Solve(connect net.Conn) {
 	}()
 
 	for {
+		_, err := flowcontroller.Controller.GetToken()
+		log.Println(flowcontroller.Controller.GetRemainNum())
+		if err != nil {
+			connect.Write([]byte("The system is busy, please try again later"))
+			log.Println(err)
+			return
+		}
+
 		temp, err := ReadText(connect)
+
+		flowcontroller.Controller.PopToken()
+
 		if err != nil {
 			break
 		}
