@@ -1,4 +1,4 @@
-package spiderMail
+package Mail
 
 import (
 	"log"

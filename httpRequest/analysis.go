@@ -13,10 +13,6 @@ var Disallow []string
 
 // 得到正则表达式分析的页面结果
 func RegexpHtml(url string, regexpRule string) []string {
-	// 如果是 disallow 的内容，则返回空
-	if IsDisallow(url) {
-		return nil
-	}
 	html := GetRequestByte(url)
 
 	obj := regexp.MustCompile(regexpRule)

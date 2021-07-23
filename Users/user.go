@@ -1,10 +1,9 @@
-package spiderUsers
+package Users
 
 import (
-	"GoProject/spider/httpRequest"
+	"1/httpRequest"
 	"crypto/sha512"
 	"encoding/hex"
-	"fmt"
 	"log"
 	"math/rand"
 	"strconv"
@@ -29,25 +28,25 @@ type userAcnt struct {
 	Accounts string `db:"account"`
 }
 
-func (user *User) CheckUserExist(registerAccount string) bool {
+func (user *User) CheckUserExist() bool {
 	db := sqlx.MustConnect("mysql", httpRequest.MySQLInfo)
 	defer db.Close()
 
 	useraccount := userAcnt{}
 
-	db.Get(&useraccount, "SELECT account FROM user WHERE account = ?", registerAccount)
+	db.Get(&useraccount, "SELECT account FROM user WHERE account = ?", user.MailAccount)
 
-	return useraccount.Accounts == registerAccount
+	return useraccount.Accounts == user.MailAccount
 }
 
 // 注册功能
-func (user *User) Register(registerAccount, registerPassword string) string {
+func (user *User) Register() string {
 	db := sqlx.MustConnect("mysql", httpRequest.MySQLInfo)
 	defer db.Close()
 
 	passwd := make([]byte, 0)
 	// sha512 加密
-	code := sha512.Sum512([]byte(registerPassword))
+	code := sha512.Sum512([]byte(user.MailPassword))
 	passwd = append(passwd, code[:]...)
 
 	// 将 16 进制转为字符串存储
@@ -57,7 +56,7 @@ func (user *User) Register(registerAccount, registerPassword string) string {
 		return ""
 	}
 
-	_, err = tx.Exec("INSERT INTO user VALUES(?,?,?)", 0, registerAccount, hex.EncodeToString(passwd))
+	_, err = tx.Exec("INSERT INTO user VALUES(?,?,?)", 0, user.MailAccount, hex.EncodeToString(passwd))
 	if err != nil {
 		log.Println(err)
 		return ""
@@ -120,9 +119,9 @@ func (user *User) ChangePassword(newPassword string) string {
 }
 
 // 发送验证码
-func (user *User) Verification(ReceiverAccount string) {
+func (user *User) Verification() {
 	// 接收者邮箱
-	mail := httpRequest.GetNewMail(ReceiverAccount)
+	mail := httpRequest.GetNewMail(user.MailAccount)
 
 	verificationCode := user.sendCode()
 
@@ -132,30 +131,30 @@ func (user *User) Verification(ReceiverAccount string) {
 	defer connect.Close()
 
 	// 验证码持续时间 5 分钟，过期自动失效
-	_, err := connect.Do("SET", ReceiverAccount, verificationCode, "ex", "300")
+	_, err := connect.Do("SET", user.MailAccount, verificationCode, "ex", "300")
 	if err != nil {
-		fmt.Println(err)
+		log.Println(err)
 	}
 }
 
 // 获取验证码
-func (user *User) GetVerificationCode(ReceiverAccount string) string {
-	if !user.FindVerificationCode(ReceiverAccount) {
+func (user *User) GetVerificationCode() string {
+	if !user.FindVerificationCode() {
 		return "not exist"
 	}
 	connect, _ := redis.Dial("tcp", "127.0.0.1:6379")
 	defer connect.Close()
 
-	reply, _ := redis.String(connect.Do("GET", ReceiverAccount))
+	reply, _ := redis.String(connect.Do("GET", user.MailAccount))
 	return reply
 }
 
 // 查找验证码是否过期
-func (user *User) FindVerificationCode(ReceiverAccount string) bool {
+func (user *User) FindVerificationCode() bool {
 	connect, _ := redis.Dial("tcp", "127.0.0.1:6379")
 	defer connect.Close()
 
-	isExist, _ := redis.Bool(connect.Do("EXISTS", ReceiverAccount))
+	isExist, _ := redis.Bool(connect.Do("EXISTS", user.MailAccount))
 	return isExist
 }
 

@@ -1,7 +1,7 @@
-package spiderText
+package Text
 
 import (
-	"GoProject/spider/httpRequest"
+	"1/httpRequest"
 	"log"
 	"regexp"
 	"sync"

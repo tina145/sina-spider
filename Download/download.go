@@ -1,7 +1,7 @@
 package spiderDownload
 
 import (
-	"GoProject/spider/httpRequest"
+	"1/httpRequest"
 	"io/ioutil"
 	"log"
 	"math/rand"
