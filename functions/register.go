@@ -7,9 +7,21 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
-func Regiter(ctx *gin.Context) {
+func ToRegister(ctx *gin.Context) {
+	ctx.HTML(http.StatusOK, "register.html", nil)
+}
+
+func Register(ctx *gin.Context) {
 	userName := ctx.PostForm("userName")
 	passWord := ctx.PostForm("passWord")
+
+	if userName == "" {
+		ctx.String(http.StatusOK, "邮箱不能为空")
+		return
+	} else if passWord == "" {
+		ctx.String(http.StatusOK, "密码不能为空")
+		return
+	}
 
 	userInfo := &Users.User{
 		MailAccount:  userName,
@@ -22,7 +34,6 @@ func Regiter(ctx *gin.Context) {
 	}
 
 	userInfo.Verification()
-
 	code := ctx.PostForm("code")
 
 	if code != userInfo.GetVerificationCode() {
