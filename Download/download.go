@@ -1,11 +1,11 @@
 package spiderDownload
 
 import (
-	"1/httpRequest"
 	"io/ioutil"
 	"log"
 	"math/rand"
 	"os"
+	"project/httpRequest"
 	"regexp"
 	"strconv"
 	"sync"

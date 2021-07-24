@@ -1,8 +1,8 @@
 package main
 
 import (
-	"1/Text"
-	"1/functions"
+	"project/Text"
+	"project/functions"
 	"time"
 
 	"github.com/gin-gonic/gin"

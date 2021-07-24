@@ -1,9 +1,9 @@
 package functions
 
 import (
-	"1/Mail"
-	"1/Text"
 	"net/http"
+	"project/Mail"
+	"project/Text"
 	"time"
 
 	"github.com/gin-gonic/gin"

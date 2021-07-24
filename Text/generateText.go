@@ -1,8 +1,8 @@
 package Text
 
 import (
-	"1/httpRequest"
 	"log"
+	"project/httpRequest"
 	"regexp"
 	"sync"
 

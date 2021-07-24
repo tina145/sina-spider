@@ -1,4 +1,4 @@
-module 1
+module project
 
 go 1.15
 

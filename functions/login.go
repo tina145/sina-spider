@@ -1,8 +1,8 @@
 package functions
 
 import (
-	"1/Users"
 	"net/http"
+	"project/Users"
 
 	"github.com/garyburd/redigo/redis"
 	"github.com/gin-gonic/gin"

@@ -1,12 +1,12 @@
 package Users
 
 import (
-	"1/Mail"
-	"1/httpRequest"
 	"crypto/sha512"
 	"encoding/hex"
 	"log"
 	"math/rand"
+	"project/Mail"
+	"project/httpRequest"
 	"strconv"
 	"time"
 
