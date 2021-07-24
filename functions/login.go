@@ -8,9 +8,11 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
-func Login(ctx *gin.Context) {
-	ctx.HTML(http.StatusOK, "file", nil)
+func ToLogin(ctx *gin.Context) {
+	ctx.HTML(http.StatusOK, "login.html", nil)
+}
 
+func Login(ctx *gin.Context) {
 	userName := ctx.PostForm("userName")
 	passWord := ctx.PostForm("passWord")
 
@@ -23,9 +25,11 @@ func Login(ctx *gin.Context) {
 
 	conn, _ := redis.Dial("tcp", "127.0.0.1:6379")
 	defer conn.Close()
-	if statu == "success" {
-		conn.Do("set", userInfo.MailAccount, "login")
+	if statu != "success" {
+		ctx.String(http.StatusOK, "登陆失败")
+		return
 	}
 
-	ctx.String(http.StatusOK, statu)
+	ctx.SetCookie("cookie", userName, 86400, "/", "localhost:8080", false, true)
+	ctx.HTML(http.StatusOK, "function.html", nil)
 }

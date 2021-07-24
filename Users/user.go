@@ -1,6 +1,7 @@
 package Users
 
 import (
+	"1/Mail"
 	"1/httpRequest"
 	"crypto/sha512"
 	"encoding/hex"
@@ -121,7 +122,7 @@ func (user *User) ChangePassword(newPassword string) string {
 // 发送验证码
 func (user *User) Verification() {
 	// 接收者邮箱
-	mail := httpRequest.GetNewMail(user.MailAccount)
+	mail := Mail.GetNewMail(user.MailAccount)
 
 	verificationCode := user.sendCode()
 

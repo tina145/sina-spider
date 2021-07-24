@@ -1,7 +1,6 @@
 package httpRequest
 
 import (
-	"1/Mail"
 	"crypto/rand"
 	"log"
 	"math/big"
@@ -22,7 +21,7 @@ var userAgents []string = []string{
 	"Mozilla/5.0 (compatible; MSIE 9.0; Windows NT 6.1; Trident/5.0",
 	"Mozilla/5.0 (Windows NT 6.1; rv:2.0.1) Gecko/20100101 Firefox/4.0.1"}
 
-var MySQLInfo string = "root:密码@tcp(localhost:3306)/数据库名称"
+var MySQLInfo string = "root:密码@tcp(localhost:3306)/表名"
 
 func GetRandomUserAgent() string {
 	n, err := rand.Int(rand.Reader, big.NewInt(int64(len(userAgents))))
@@ -30,14 +29,4 @@ func GetRandomUserAgent() string {
 		log.Println(err)
 	}
 	return userAgents[n.Int64()]
-}
-
-func GetNewMail(userMailAccount string) *Mail.Mail {
-	return &Mail.Mail{
-		SenderAccount:  "发送",
-		SenderPassword: "发送",
-		Receiver:       userMailAccount,
-		ServerAddr:     "smtp.office365.com",
-		ServerPort:     587,
-	}
 }

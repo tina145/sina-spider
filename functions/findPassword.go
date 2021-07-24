@@ -7,14 +7,20 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
+func ToFindPassword(ctx *gin.Context) {
+	ctx.HTML(http.StatusOK, "findPassword.html", nil)
+}
+
 func FindPassword(ctx *gin.Context) {
 	userName := ctx.PostForm("userName")
 	userInfo := &Users.User{
 		MailAccount: userName,
 	}
 
-	// 发送验证码
-	userInfo.Verification()
+	if userName == "" {
+		ctx.String(http.StatusOK, "用户名不能为空")
+		return
+	}
 
 	code := ctx.PostForm("code")
 	if code != userInfo.GetVerificationCode() {
@@ -23,8 +29,12 @@ func FindPassword(ctx *gin.Context) {
 	}
 
 	newPassword := ctx.PostForm("newPassword")
+	if newPassword == "" {
+		ctx.String(http.StatusOK, "密码不能为空")
+		return
+	}
 
 	userInfo.ChangePassword(newPassword)
 
-	ctx.String(http.StatusOK, "修改完成！")
+	ctx.HTML(http.StatusOK, "login.html", nil)
 }
