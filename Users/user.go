@@ -120,7 +120,7 @@ func (user *User) ChangePassword(newPassword string) string {
 }
 
 // 发送验证码
-func (user *User) Verification() {
+func (user *User) Verification() error {
 	// 接收者邮箱
 	mail := Mail.GetNewMail(user.MailAccount)
 
@@ -135,7 +135,9 @@ func (user *User) Verification() {
 	_, err := connect.Do("SET", user.MailAccount, verificationCode, "ex", "300")
 	if err != nil {
 		log.Println(err)
+		return err
 	}
+	return nil
 }
 
 // 获取验证码
