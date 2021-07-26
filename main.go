@@ -1,10 +1,9 @@
 package main
 
 import (
-	"crypto/rand"
 	"fmt"
 	"io"
-	"math/big"
+	"math/rand"
 	"net/http"
 	"os"
 	"project/Mail"
@@ -12,6 +11,7 @@ import (
 	"project/Users"
 	"project/functions"
 	"project/httpRequest"
+	"strconv"
 	"time"
 
 	"github.com/gin-gonic/gin"
@@ -67,8 +67,9 @@ func countTime() {
 	for {
 		Text.GenerateText()
 		// 1.5 小时到 3.5 小时抓取一次
-		result, _ := rand.Int(rand.Reader, big.NewInt(7200))
-		time.Sleep(time.Second * time.Duration(result.Int64()+5400))
+		rand.Seed(time.Now().UnixNano())
+		result := rand.Intn(7200) + 5400
+		time.Sleep(time.Second * time.Duration(result))
 	}
 }
 
@@ -78,11 +79,6 @@ func sendEveryUser() {
 	defer db.Close()
 
 	for {
-		users := Users.SelectUsersAccount()
-		for _, user := range users {
-			waitToSend := Mail.GetNewMail(user)
-			waitToSend.Send(time.Now().String()[:19]+" "+time.Now().Weekday().String()+"：每日要闻", Text.SelectFirst10(), gomail.NewMessage())
-		}
 		nowHour, nowMinute := time.Now().Hour(), time.Now().Minute()
 		waitSeconds := 0
 
@@ -95,5 +91,13 @@ func sendEveryUser() {
 		}
 
 		time.Sleep(time.Second * time.Duration(waitSeconds))
+		users := Users.SelectUsersAccount()
+		for _, user := range users {
+			waitToSend := Mail.GetNewMail(user)
+			rand.Seed(time.Now().UnixNano())
+			// 发送带图片的邮件
+			picNum := strconv.Itoa(rand.Intn(248) + 1)
+			waitToSend.Send(time.Now().String()[:19]+" "+time.Now().Weekday().String()+"：每日要闻", Text.SelectFirst10WithPicture(picNum), gomail.NewMessage(), ".\\picture\\"+picNum+".png")
+		}
 	}
 }

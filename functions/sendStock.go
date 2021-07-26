@@ -1,9 +1,11 @@
 package functions
 
 import (
+	"math/rand"
 	"net/http"
 	"project/Mail"
 	"project/Text"
+	"strconv"
 	"sync"
 	"time"
 
@@ -26,7 +28,10 @@ func SendStock(ctx *gin.Context) {
 	wg.Add(1)
 	go func() {
 		defer wg.Done()
-		users.Send(time.Now().String()[:19]+" "+time.Now().Weekday().String()+"：每日要闻", Text.SelectFirst10(), gomail.NewMessage())
+
+		rand.Seed(time.Now().UnixNano())
+		picNum := strconv.Itoa(rand.Intn(248) + 1)
+		users.Send(time.Now().String()[:19]+" "+time.Now().Weekday().String()+"：每日要闻", Text.SelectFirst10WithPicture(picNum), gomail.NewMessage(), ".\\picture\\"+picNum+".png")
 	}()
 
 	ctx.String(http.StatusOK, "已发送，如果没有收到请检查垃圾箱。")
