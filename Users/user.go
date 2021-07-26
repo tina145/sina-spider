@@ -3,7 +3,6 @@ package Users
 import (
 	"crypto/sha512"
 	"encoding/hex"
-	"log"
 	"math/rand"
 	"project/Mail"
 	"project/httpRequest"
@@ -53,18 +52,15 @@ func (user *User) Register() string {
 	// 将 16 进制转为字符串存储
 	tx, err := db.Begin()
 	if err != nil {
-		log.Println(err)
 		return ""
 	}
 
 	_, err = tx.Exec("INSERT INTO user VALUES(?,?,?)", 0, user.MailAccount, hex.EncodeToString(passwd))
 	if err != nil {
-		log.Println(err)
 		return ""
 	}
 	err = tx.Commit()
 	if err != nil {
-		log.Println(err)
 		return ""
 	}
 
@@ -98,7 +94,6 @@ func (user *User) ChangePassword(newPassword string) string {
 	tx, err := db.Begin()
 
 	if err != nil {
-		log.Println(err)
 		return "fail"
 	}
 
@@ -108,12 +103,10 @@ func (user *User) ChangePassword(newPassword string) string {
 
 	_, err = tx.Exec("UPDATE user SET password = ? WHERE account = ?", hex.EncodeToString(passwd), user.MailAccount)
 	if err != nil {
-		log.Println(err)
 		return "fail"
 	}
 	err = tx.Commit()
 	if err != nil {
-		log.Println(err)
 		return "fail"
 	}
 	return "success"
@@ -134,7 +127,6 @@ func (user *User) Verification() error {
 	// 验证码持续时间 5 分钟，过期自动失效
 	_, err := connect.Do("SET", user.MailAccount, verificationCode, "ex", "300")
 	if err != nil {
-		log.Println(err)
 		return err
 	}
 	return nil
