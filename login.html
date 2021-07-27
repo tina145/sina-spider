@@ -1,0 +1,70 @@
+﻿<!-- 登录页面（默认进入的页面） -->
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>信息订阅平台</title>
+    <link rel="stylesheet" type="text/css" href="a.css">
+    <link rel="stylesheet" type="text/css" href="b.css">
+    <link rel="stylesheet" type="text/css" href="c.css">
+
+    <style type="text/css">
+        .class1 
+        {
+            background-attachment:fixed;
+            background-image: url(1.jpg);
+            background-size: cover;
+        }
+
+
+    </style>
+
+</head>
+
+
+
+<body class="class1">
+
+    <br><br><br><br><br><br><br>
+    <center><a>信息订阅平台</a></center>
+
+    <br><br>
+    <form action="/login" method="post">
+
+        <center>
+            <b>
+                邮箱：<input type="text" name="userName">
+            </b>
+        </center>
+        <br>
+        <center>
+            <b>
+                密码：
+                <input type="password" name="passWord">
+            </b>
+        </center>
+        <br>
+
+        <center>
+            <c>
+                <input type="checkbox">记住我
+            </c>
+        </center>
+
+        <center>
+            &nbsp&nbsp&nbsp&nbsp&nbsp&nbsp
+            <input type="submit" value="登录"> 
+            &nbsp&nbsp&nbsp&nbsp
+            <a href="/toverificationCode" target="_self">
+                <input type="button" value="注册">
+            </a>
+        </center>
+    </form>
+</body>
+
+</html>
+
+
