@@ -10,7 +10,7 @@ import (
 	"project/Text"
 	"project/Users"
 	"project/functions"
-	"project/httpRequest"
+	"project/infomation"
 	"strconv"
 	"time"
 
@@ -45,6 +45,7 @@ func main() {
 
 	router.LoadHTMLGlob("HTML/*")
 	router.StaticFS("/TXT", http.Dir("./TXT"))
+	router.StaticFS("/music", http.Dir("./music"))
 	router.GET("/", functions.ToLogin)
 	router.GET("/toRegister", functions.ToRegister)
 	router.GET("/toChangePassword", functions.ToChangePassword)
@@ -58,6 +59,7 @@ func main() {
 	router.POST("/changePassword", functions.ChangePassWord)
 	router.POST("/findPassword", functions.FindPassword)
 	router.POST("/sendCode", functions.SendCode)
+	router.POST("/upload", functions.Upload)
 	router.GET("/sendStock", functions.SendStock)
 
 	router.Run()
@@ -75,7 +77,7 @@ func countTime() {
 
 // 6 点、18 点定时推送
 func sendEveryUser() {
-	db := sqlx.MustConnect("mysql", httpRequest.MySQLInfo)
+	db := sqlx.MustConnect("mysql", infomation.MySQLInfo)
 	defer db.Close()
 
 	for {
@@ -96,8 +98,8 @@ func sendEveryUser() {
 			waitToSend := Mail.GetNewMail(user)
 			rand.Seed(time.Now().UnixNano())
 			// 发送带图片的邮件
-			picNum := strconv.Itoa(rand.Intn(18) + 1)
-			waitToSend.Send(time.Now().String()[:19]+" "+time.Now().Weekday().String()+"：每日要闻", Text.SelectFirst10WithPicture(picNum), gomail.NewMessage(), ".\\pic\\"+picNum+".png")
+			picNum := strconv.Itoa(rand.Intn(infomation.PicMaxNum) + 1)
+			waitToSend.Send(time.Now().String()[:19]+" "+time.Now().Weekday().String()+"：每日要闻", Text.SelectFirst10WithPicture(picNum), gomail.NewMessage(), "./"+infomation.PicDir+picNum+".png")
 		}
 	}
 }

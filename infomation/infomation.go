@@ -1,4 +1,4 @@
-package httpRequest
+package infomation
 
 import (
 	"crypto/rand"
@@ -21,6 +21,26 @@ var userAgents []string = []string{
 	"Mozilla/5.0 (Windows NT 6.1; rv:2.0.1) Gecko/20100101 Firefox/4.0.1"}
 
 var MySQLInfo string = ""
+
+var SystemUserAccount = ""
+
+// 图片数量
+var PicMaxNum = 18
+
+// 图片文件夹路径
+var PicDir = "pic/"
+
+var PicFormat = ".png"
+
+var MusicDir = ""
+
+var SenderAccount = ""
+
+var SenderPassword = ""
+
+var ServerAddr = ""
+
+var ServerPort = 
 
 func GetRandomUserAgent() string {
 	n, err := rand.Int(rand.Reader, big.NewInt(int64(len(userAgents))))
